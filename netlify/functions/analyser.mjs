@@ -1,5 +1,5 @@
-// Modèles essayés dans l'ordre (si le 1er est saturé, on passe au 2e)
-const MODELES = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"];
+// Modèles essayés dans l'ordre (si le 1er échoue, on passe au 2e)
+const MODELES = ["openai/gpt-oss-120b", "openai/gpt-oss-20b"];
 
 const PROMPT = `Tu es "Arnaque ou pas", un expert français en cybersécurité et en fraude, qui aide les 15-25 ans à repérer les arnaques.
 
@@ -51,8 +51,10 @@ export default async (req) => {
   if (typeof message !== "string" || !message.trim()) return json({ erreur: "Message vide" }, 400);
   if (message.length > 3000) return json({ erreur: "Message trop long (3000 caractères max)" }, 400);
 
-  const cle = process.env.GROQ_API_KEY;
+  const cle = (process.env.GROQ_API_KEY || "").trim();
   if (!cle) return json({ erreur: "Clé API manquante sur le serveur" }, 500);
+
+  let derniereErreur = "";
 
   for (const modele of MODELES) {
     try {
@@ -62,7 +64,8 @@ export default async (req) => {
         body: JSON.stringify({
           model: modele,
           temperature: 0.2,
-          max_tokens: 700,
+          max_completion_tokens: 2000,
+          reasoning_effort: "low",
           response_format: { type: "json_object" },
           messages: [
             { role: "system", content: PROMPT },
@@ -70,16 +73,43 @@ export default async (req) => {
           ]
         })
       });
-      if (!rep.ok) { console.error(modele, rep.status, await rep.text()); continue; }
+
+      if (!rep.ok) {
+        const texte = await rep.text();
+        console.error(modele, rep.status, texte);
+        if (rep.status === 401) {
+          return json({ erreur: "Clé API invalide : vérifie GROQ_API_KEY sur Netlify, puis redéploie." }, 500);
+        }
+        derniereErreur = `${modele} : erreur ${rep.status}`;
+        continue;
+      }
+
       const data = await rep.json();
-      const resultat = JSON.parse(data.choices[0].message.content);
+      const contenu = data.choices?.[0]?.message?.content || "";
+      const resultat = extraireJSON(contenu);
+      if (!resultat) {
+        console.error(modele, "réponse illisible :", contenu);
+        derniereErreur = `${modele} : réponse illisible`;
+        continue;
+      }
       return json(nettoyer(resultat));
     } catch (e) {
       console.error(modele, e);
+      derniereErreur = `${modele} : ${e.message}`;
     }
   }
-  return json({ erreur: "L'IA est surchargée, réessaie dans une minute 🙏" }, 503);
+  return json({ erreur: `L'IA ne répond pas (${derniereErreur}). Réessaie dans une minute 🙏` }, 503);
 };
+
+// Récupère le JSON même si l'IA a ajouté du texte autour
+function extraireJSON(t) {
+  try { return JSON.parse(t); } catch {}
+  const debut = t.indexOf("{"), fin = t.lastIndexOf("}");
+  if (debut >= 0 && fin > debut) {
+    try { return JSON.parse(t.slice(debut, fin + 1)); } catch {}
+  }
+  return null;
+}
 
 // On vérifie que l'IA a bien renvoyé ce qu'on attend
 function nettoyer(r) {
