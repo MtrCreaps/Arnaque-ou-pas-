@@ -3,82 +3,275 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Arnaque ou pas ? 🚨</title>
+<title>Arnaque ou pas ? 🚨 Le détecteur d'arnaques par IA</title>
+<meta name="description" content="Colle un SMS, un DM ou un mail louche : l'IA te dit en quelques secondes si c'est une arnaque.">
+<meta name="theme-color" content="#FFF4E0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚨</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap" rel="stylesheet">
 <style>
+  :root {
+    --bg: #FFF4E0; --ink: #121212; --blanc: #fff; --gris: #5a5a5a;
+    --jaune: #FFD43B; --rose: #FF5C8A; --vert: #2BD488; --orange: #FF9F1C; --bleu: #6C9CFF; --violet: #B197FC;
+    --ombre: 5px 5px 0 var(--ink);
+  }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: system-ui, -apple-system, sans-serif; background: #0d0d12; color: #f2f2f2; min-height: 100vh; padding: 20px; }
-  .wrap { max-width: 640px; margin: 0 auto; }
-  h1 { font-size: 2.2rem; text-align: center; margin: 20px 0 6px; }
-  h1 span { color: #ff3b5c; }
-  .sub { text-align: center; color: #9a9aad; margin-bottom: 24px; line-height: 1.5; }
-  textarea { width: 100%; height: 160px; background: #1a1a24; color: #fff; border: 2px solid #2c2c3a; border-radius: 16px; padding: 16px; font-size: 1rem; resize: vertical; font-family: inherit; }
-  textarea:focus { outline: none; border-color: #ff3b5c; }
-  .compteur { text-align: right; color: #66667a; font-size: .8rem; margin-top: 4px; }
-  .btn { width: 100%; margin-top: 10px; padding: 16px; font-size: 1.1rem; font-weight: 700; border: none; border-radius: 16px; background: linear-gradient(90deg, #ff3b5c, #ff8a00); color: #fff; cursor: pointer; transition: transform .1s, opacity .2s; }
-  .btn:active { transform: scale(.97); }
-  .btn:disabled { opacity: .6; cursor: wait; }
-  .exemples { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-  .exemples button { background: #1a1a24; color: #ccc; border: 1px solid #2c2c3a; border-radius: 999px; padding: 8px 14px; cursor: pointer; font-size: .85rem; }
-  .exemples button:hover { border-color: #ff8a00; color: #fff; }
-  #resultat { display: none; margin-top: 28px; background: #1a1a24; border-radius: 20px; padding: 24px; animation: pop .3s ease; }
-  @keyframes pop { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
-  .score { font-size: 3.5rem; font-weight: 900; text-align: center; }
-  .verdict { text-align: center; font-size: 1.3rem; font-weight: 700; margin-bottom: 10px; }
-  .badge { display: block; width: fit-content; margin: 0 auto 16px; background: #2c2c3a; padding: 6px 14px; border-radius: 999px; font-size: .85rem; color: #ffb3c0; }
-  .jauge { height: 12px; background: #2c2c3a; border-radius: 999px; overflow: hidden; margin-bottom: 20px; }
-  .jauge div { height: 100%; width: 0; transition: width .8s ease; border-radius: 999px; }
-  .explication { background: #22222f; border-radius: 12px; padding: 14px; line-height: 1.5; }
-  h3 { margin: 18px 0 10px; font-size: 1.05rem; }
-  .signal { background: #22222f; border-left: 4px solid #ff3b5c; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; line-height: 1.4; }
-  ul { padding-left: 20px; } li { margin-bottom: 6px; line-height: 1.4; }
-  .partager { background: #2c2c3a; margin-top: 18px; }
-  .erreur { margin-top: 16px; background: #3a1a22; border: 1px solid #ff3b5c; border-radius: 12px; padding: 12px; text-align: center; display: none; }
-  .loader { display: inline-block; width: 18px; height: 18px; border: 3px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; vertical-align: middle; margin-right: 8px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  .footer { text-align: center; color: #66667a; font-size: .8rem; margin: 30px 0; line-height: 1.5; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: "Bricolage Grotesque", system-ui, sans-serif;
+    background: var(--bg); color: var(--ink); min-height: 100vh; overflow-x: hidden;
+    background-image: radial-gradient(rgba(18,18,18,.09) 1.2px, transparent 1.2px);
+    background-size: 22px 22px;
+  }
+  .wrap { max-width: 680px; margin: 0 auto; padding: 0 18px; }
+
+  /* ---------- Barre du haut ---------- */
+  nav { display: flex; justify-content: space-between; align-items: center; padding: 18px 0; }
+  .logo { font-weight: 800; font-size: 1.15rem; display: flex; align-items: center; gap: 10px; }
+  .logo-ico { width: 38px; height: 38px; display: grid; place-items: center; background: var(--rose);
+    border: 3px solid var(--ink); border-radius: 11px; box-shadow: 3px 3px 0 var(--ink); transform: rotate(-6deg); }
+  .pastille { background: var(--vert); border: 2.5px solid var(--ink); border-radius: 999px; padding: 5px 12px;
+    font-size: .8rem; font-weight: 800; box-shadow: 2px 2px 0 var(--ink); }
+
+  /* ---------- Titre ---------- */
+  .hero { text-align: center; padding: 30px 0 10px; }
+  .hero h1 { font-size: clamp(2.7rem, 10vw, 4.6rem); line-height: .95; font-weight: 800; letter-spacing: -.035em; }
+  .surligne { display: inline-block; margin-top: 10px; padding: 0 .18em .05em; background: var(--jaune);
+    border: 3.5px solid var(--ink); border-radius: 14px; box-shadow: var(--ombre); transform: rotate(-2.5deg); }
+  .hero p { margin: 26px auto 0; max-width: 470px; font-size: 1.12rem; line-height: 1.45; color: var(--gris); }
+
+  /* ---------- Bandeau défilant ---------- */
+  .ticker { width: 104%; margin: 34px 0 34px -2%; overflow: hidden; background: var(--ink); color: var(--jaune);
+    border-block: 3px solid var(--ink); transform: rotate(-1.5deg); }
+  .ticker-piste { display: flex; width: max-content; animation: defile 35s linear infinite; }
+  .ticker span { padding: 12px 16px; font-weight: 800; white-space: nowrap; letter-spacing: .02em; }
+  @keyframes defile { to { transform: translateX(-50%); } }
+
+  /* ---------- Cartes ---------- */
+  .carte { background: var(--blanc); border: 3px solid var(--ink); border-radius: 20px; box-shadow: var(--ombre); padding: 20px; }
+
+  /* ---------- Zone de saisie ---------- */
+  .saisie-haut { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .etiquette { font-weight: 800; font-size: 1rem; }
+  .outils { display: flex; gap: 8px; }
+  .mini { font: inherit; font-weight: 800; font-size: .85rem; padding: 7px 11px; cursor: pointer; background: var(--bg);
+    border: 2.5px solid var(--ink); border-radius: 10px; box-shadow: 2px 2px 0 var(--ink); transition: transform .1s, box-shadow .1s; color: var(--ink); }
+  .mini:active { transform: translate(2px, 2px); box-shadow: none; }
+  textarea { width: 100%; min-height: 160px; padding: 14px; font: inherit; font-size: 1.05rem; line-height: 1.45; resize: vertical;
+    background: #FFFCF5; color: var(--ink); border: 3px solid var(--ink); border-radius: 14px; transition: box-shadow .15s; }
+  textarea:focus { outline: none; box-shadow: 0 0 0 5px var(--jaune); }
+  textarea::placeholder { color: #9b9384; }
+  .saisie-bas { display: flex; justify-content: space-between; gap: 10px; margin-top: 9px; font-size: .82rem; font-weight: 600; color: var(--gris); }
+
+  /* ---------- Boutons ---------- */
+  .btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; margin-top: 16px; padding: 17px;
+    font: inherit; font-size: 1.2rem; font-weight: 800; color: var(--ink); background: var(--rose); cursor: pointer;
+    border: 3px solid var(--ink); border-radius: 14px; box-shadow: var(--ombre); transition: transform .12s, box-shadow .12s, background .2s; }
+  .btn:hover { transform: translate(-2px, -2px); box-shadow: 7px 7px 0 var(--ink); }
+  .btn:active { transform: translate(4px, 4px); box-shadow: 1px 1px 0 var(--ink); }
+  .btn:disabled { background: var(--jaune); cursor: wait; transform: none; box-shadow: var(--ombre); }
+  .btn.secondaire { background: var(--blanc); }
+  .kbd { font-size: .75rem; font-weight: 700; opacity: .65; }
+  .spin { width: 20px; height: 20px; flex: none; border: 3px solid var(--ink); border-top-color: transparent; border-radius: 50%; animation: tourne .7s linear infinite; }
+  @keyframes tourne { to { transform: rotate(360deg); } }
+
+  .erreur { display: none; margin-top: 14px; padding: 12px 14px; font-weight: 700; background: #FFE1E9;
+    border: 3px solid var(--ink); border-radius: 14px; }
+
+  /* ---------- Exemples ---------- */
+  .titre-section { margin: 38px 0 14px; font-size: .95rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+  .puces { display: flex; flex-wrap: wrap; gap: 10px; }
+  .puce { font: inherit; font-weight: 700; font-size: .93rem; padding: 9px 15px; cursor: pointer; color: var(--ink);
+    border: 2.5px solid var(--ink); border-radius: 999px; box-shadow: 3px 3px 0 var(--ink); transition: transform .12s, box-shadow .12s; }
+  .puce:hover { transform: translate(-1px, -2px) rotate(-2deg); box-shadow: 4px 5px 0 var(--ink); }
+  .puce:active { transform: translate(2px, 2px); box-shadow: none; }
+  .puce:nth-child(1) { background: var(--jaune); }
+  .puce:nth-child(2) { background: var(--bleu); }
+  .puce:nth-child(3) { background: var(--violet); }
+  .puce:nth-child(4) { background: var(--orange); }
+  .puce:nth-child(5) { background: var(--rose); }
+  .puce:nth-child(6) { background: var(--vert); }
+
+  /* ---------- Résultat ---------- */
+  #resultat { display: none; margin-top: 40px; scroll-margin-top: 16px; }
+  #resultat.visible { display: block; animation: entree .5s cubic-bezier(.2, 1.4, .4, 1); }
+  @keyframes entree { from { opacity: 0; transform: translateY(24px) scale(.96); } to { opacity: 1; transform: none; } }
+  #resultat[data-niveau="danger"] { --niv: var(--rose); }
+  #resultat[data-niveau="moyen"]  { --niv: var(--orange); }
+  #resultat[data-niveau="ok"]     { --niv: var(--vert); }
+
+  .verdict-carte { position: relative; text-align: center; padding: 30px 20px 26px; background: var(--niv); }
+  .emoji-niv { position: absolute; top: -22px; right: 18px; font-size: 2.2rem; width: 62px; height: 62px; display: grid; place-items: center;
+    background: var(--blanc); border: 3px solid var(--ink); border-radius: 50%; box-shadow: 3px 3px 0 var(--ink); transform: rotate(12deg); }
+  .jauge { position: relative; width: 176px; height: 176px; margin: 0 auto 18px; background: var(--blanc);
+    border: 3px solid var(--ink); border-radius: 50%; box-shadow: var(--ombre); }
+  .jauge svg { position: absolute; inset: 9px; width: calc(100% - 18px); height: calc(100% - 18px); transform: rotate(-90deg); }
+  .jauge circle { fill: none; stroke-width: 11; }
+  .piste { stroke: #F1EADC; }
+  .progres { stroke: var(--ink); stroke-linecap: round; stroke-dasharray: 326.73; stroke-dashoffset: 326.73;
+    transition: stroke-dashoffset 1.1s cubic-bezier(.2, .8, .2, 1); }
+  .jauge-centre { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+  .jauge-score { font-size: 3.4rem; font-weight: 800; line-height: 1; letter-spacing: -.03em; }
+  .jauge-sur { font-size: .9rem; font-weight: 800; color: var(--gris); }
+  .niveau { display: inline-block; margin-bottom: 10px; padding: 4px 12px; font-size: .8rem; font-weight: 800; letter-spacing: .1em;
+    background: var(--ink); color: var(--blanc); border-radius: 8px; }
+  .verdict { font-size: clamp(1.5rem, 5.5vw, 2.1rem); font-weight: 800; line-height: 1.1; letter-spacing: -.02em; margin-bottom: 16px; }
+  .sticker { display: inline-block; padding: 6px 15px; font-weight: 800; font-size: .92rem; background: var(--blanc);
+    border: 2.5px solid var(--ink); border-radius: 999px; box-shadow: 3px 3px 0 var(--ink); transform: rotate(-3deg); }
+
+  .bloc { margin-top: 20px; }
+  .bloc h3 { font-size: 1.2rem; font-weight: 800; margin-bottom: 14px; }
+  .explication { font-size: 1.06rem; line-height: 1.55; }
+
+  .liste { list-style: none; display: grid; gap: 10px; counter-reset: n; }
+  .liste li { counter-increment: n; display: flex; gap: 12px; align-items: flex-start; padding: 12px; line-height: 1.42; font-weight: 500;
+    border: 2.5px solid var(--ink); border-radius: 12px; }
+  .liste li::before { flex: none; width: 28px; height: 28px; display: grid; place-items: center; font-weight: 800;
+    border: 2.5px solid var(--ink); border-radius: 8px; }
+  .liste-signaux li { background: #FFEFF3; }
+  .liste-signaux li::before { content: counter(n); background: var(--rose); }
+  .liste-conseils li { background: #E9FBF2; }
+  .liste-conseils li::before { content: "✓"; background: var(--vert); }
+
+  .grille-signaler { display: grid; grid-template-columns: repeat(auto-fit, minmax(185px, 1fr)); gap: 10px; }
+  .signaler { display: block; padding: 12px 14px; color: inherit; text-decoration: none; background: var(--bg);
+    border: 2.5px solid var(--ink); border-radius: 12px; transition: transform .12s, box-shadow .12s; }
+  a.signaler:hover { transform: translate(-2px, -2px); box-shadow: 4px 4px 0 var(--ink); }
+  .signaler small { display: block; font-size: .8rem; font-weight: 700; color: var(--gris); text-transform: uppercase; letter-spacing: .05em; }
+  .signaler b { display: block; font-size: 1.2rem; margin: 2px 0; }
+  .signaler span { font-size: .88rem; color: var(--gris); }
+
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 8px; }
+
+  /* ---------- Comment ça marche ---------- */
+  .etapes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+  .etape { padding: 18px 16px; }
+  .etape .num { width: 40px; height: 40px; display: grid; place-items: center; margin-bottom: 12px; font-size: 1.3rem;
+    border: 2.5px solid var(--ink); border-radius: 12px; }
+  .etape:nth-child(1) .num { background: var(--jaune); }
+  .etape:nth-child(2) .num { background: var(--bleu); }
+  .etape:nth-child(3) .num { background: var(--vert); }
+  .etape b { display: block; font-size: 1.05rem; margin-bottom: 4px; }
+  .etape p { font-size: .92rem; color: var(--gris); line-height: 1.4; }
+
+  footer { margin: 44px 0 30px; padding: 16px; text-align: center; font-size: .85rem; font-weight: 600; line-height: 1.55; color: var(--gris);
+    border: 2.5px dashed var(--ink); border-radius: 14px; }
+
+  @media (max-width: 560px) {
+    .etapes, .actions { grid-template-columns: 1fr; }
+    .saisie-bas span:first-child { max-width: 70%; }
+    .kbd { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+  }
 </style>
 </head>
 <body>
+
 <div class="wrap">
-  <h1>Arnaque <span>ou pas</span> ? 🚨</h1>
-  <p class="sub">Colle un SMS, un DM ou un mail louche. Notre IA te dit si ça pue l'arnaque.<br>🔒 On ne stocke pas tes messages. Pense à masquer tes infos perso (nom, numéro, IBAN).</p>
+  <nav>
+    <div class="logo"><span class="logo-ico">🚨</span>Arnaque ou pas</div>
+    <span class="pastille">● IA gratuite</span>
+  </nav>
 
-  <textarea id="message" maxlength="3000" placeholder="Ex : Votre colis est en attente, réglez 1,99€ de frais sous 24h..."></textarea>
-  <div class="compteur"><span id="nb">0</span>/3000</div>
-  <button class="btn" id="btnAnalyser" onclick="lancer()">Analyser avec l'IA 🔍</button>
-  <div class="erreur" id="erreur"></div>
-
-  <div class="exemples">
-    <button onclick="exemple(0)">📦 Faux colis</button>
-    <button onclick="exemple(1)">💼 Faux job</button>
-    <button onclick="exemple(2)">👕 Vinted</button>
-    <button onclick="exemple(3)">💸 Mule</button>
-    <button onclick="exemple(4)">👩 « Coucou maman »</button>
-    <button onclick="exemple(5)">😊 Message normal</button>
-  </div>
-
-  <div id="resultat">
-    <div class="score" id="score"></div>
-    <div class="verdict" id="verdict"></div>
-    <span class="badge" id="categorie"></span>
-    <div class="jauge"><div id="barre"></div></div>
-    <div class="explication" id="explication"></div>
-    <div id="zoneSignaux"><h3>🚩 Signaux d'alerte</h3><div id="signaux"></div></div>
-    <h3>✅ Ce que tu dois faire</h3>
-    <ul id="conseils"></ul>
-    <h3>📢 Où signaler</h3>
-    <ul>
-      <li><b>SMS frauduleux</b> : transfère-le gratuitement au <b>33700</b></li>
-      <li><b>Victime ou doute</b> : 17Cyber sur cybermalveillance.gouv.fr</li>
-      <li><b>Contenu illicite en ligne</b> : internet-signalement.gouv.fr (Pharos)</li>
-      <li><b>Harcèlement / chantage</b> : appelle le <b>3018</b> (gratuit et anonyme)</li>
-      <li><b>Paiement par carte frauduleux</b> : fais opposition auprès de ta banque tout de suite</li>
-    </ul>
-    <button class="btn partager" onclick="partager()">📲 Partager à mes potes</button>
-  </div>
-
-  <p class="footer">⚠️ Analyse faite par une IA : elle peut se tromper.<br>Un score faible ne veut pas dire « sans danger ». En cas de doute, ne clique pas et ne paie pas.</p>
+  <header class="hero">
+    <h1>C'est une<br><span class="surligne">arnaque ?</span></h1>
+    <p>Colle un SMS, un DM ou un mail louche. L'IA te dit en quelques secondes si ça sent l'arnaque, et quoi faire.</p>
+  </header>
 </div>
+
+<div class="ticker" aria-hidden="true"><div class="ticker-piste" id="ticker"></div></div>
+
+<main class="wrap">
+  <section class="carte">
+    <div class="saisie-haut">
+      <label for="message" class="etiquette">📩 Ton message suspect</label>
+      <div class="outils">
+        <button class="mini" id="btnColler" type="button">📋 Coller</button>
+        <button class="mini" id="btnEffacer" type="button" aria-label="Effacer">✕</button>
+      </div>
+    </div>
+    <textarea id="message" maxlength="3000" placeholder="Ex : Votre colis est en attente, réglez 1,99€ de frais sous 24h..."></textarea>
+    <div class="saisie-bas">
+      <span>🔒 Rien n'est stocké. Masque tes infos perso (nom, numéro, IBAN).</span>
+      <span><span id="nb">0</span>/3000</span>
+    </div>
+    <button class="btn" id="btnAnalyser" type="button">Analyser 🔍 <span class="kbd">Ctrl + Entrée</span></button>
+    <div class="erreur" id="erreur" role="alert"></div>
+  </section>
+
+  <h2 class="titre-section">Pas d'idée ? Teste un exemple 👇</h2>
+  <div class="puces" id="puces">
+    <button class="puce" data-i="0">📦 Faux colis</button>
+    <button class="puce" data-i="1">💼 Faux job</button>
+    <button class="puce" data-i="2">👕 Vinted</button>
+    <button class="puce" data-i="3">💸 Mule</button>
+    <button class="puce" data-i="4">👩 « Coucou maman »</button>
+    <button class="puce" data-i="5">😊 Message normal</button>
+  </div>
+
+  <!-- ---------- RÉSULTAT ---------- -->
+  <section id="resultat" aria-live="polite">
+    <div class="carte verdict-carte">
+      <span class="emoji-niv" id="emojiNiv">🚨</span>
+      <div class="jauge">
+        <svg viewBox="0 0 120 120" aria-hidden="true">
+          <circle class="piste" cx="60" cy="60" r="52"/>
+          <circle class="progres" id="progres" cx="60" cy="60" r="52"/>
+        </svg>
+        <div class="jauge-centre"><span class="jauge-score" id="score">0</span><span class="jauge-sur">/100</span></div>
+      </div>
+      <span class="niveau" id="niveau"></span>
+      <h2 class="verdict" id="verdict"></h2>
+      <span class="sticker" id="categorie"></span>
+    </div>
+
+    <div class="carte bloc">
+      <h3>🧠 L'avis de l'IA</h3>
+      <p class="explication" id="explication"></p>
+    </div>
+
+    <div class="carte bloc" id="blocSignaux">
+      <h3>🚩 Signaux d'alerte</h3>
+      <ol class="liste liste-signaux" id="signaux"></ol>
+    </div>
+
+    <div class="carte bloc">
+      <h3>✅ Ce que tu dois faire</h3>
+      <ul class="liste liste-conseils" id="conseils"></ul>
+    </div>
+
+    <div class="carte bloc">
+      <h3>📢 Où signaler</h3>
+      <div class="grille-signaler">
+        <a class="signaler" href="sms:33700"><small>SMS frauduleux</small><b>33700</b><span>Transfère-le, c'est gratuit</span></a>
+        <a class="signaler" href="https://www.cybermalveillance.gouv.fr" target="_blank" rel="noopener"><small>Victime ou doute</small><b>17Cyber</b><span>cybermalveillance.gouv.fr</span></a>
+        <a class="signaler" href="https://www.internet-signalement.gouv.fr" target="_blank" rel="noopener"><small>Contenu illicite</small><b>Pharos</b><span>internet-signalement.gouv.fr</span></a>
+        <a class="signaler" href="tel:3018"><small>Harcèlement / chantage</small><b>3018</b><span>Gratuit et anonyme</span></a>
+        <div class="signaler"><small>Paiement frauduleux</small><b>Ta banque</b><span>Fais opposition tout de suite</span></div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" id="btnPartager" type="button">📲 Partager</button>
+      <button class="btn secondaire" id="btnNouveau" type="button">🔄 Nouveau message</button>
+    </div>
+  </section>
+
+  <h2 class="titre-section">Comment ça marche</h2>
+  <div class="etapes">
+    <div class="carte etape"><div class="num">📋</div><b>Colle</b><p>Le SMS, DM, mail ou l'annonce qui te paraît louche.</p></div>
+    <div class="carte etape"><div class="num">🧠</div><b>L'IA analyse</b><p>Elle cherche les techniques des arnaqueurs : urgence, liens, codes…</p></div>
+    <div class="carte etape"><div class="num">🛡️</div><b>Tu sais quoi faire</b><p>Une note, une explication et les bons réflexes.</p></div>
+  </div>
+
+  <footer>
+    ⚠️ Analyse faite par une IA : elle peut se tromper.<br>
+    Un score faible ne veut pas dire « sans danger ». En cas de doute, ne clique pas et ne paie pas.
+  </footer>
+</main>
 
 <script>
 const EXEMPLES = [
@@ -90,99 +283,171 @@ const EXEMPLES = [
   "Yo on se retrouve à 18h devant le ciné ? Je prends les places 🍿",
 ];
 
-const champ = document.getElementById("message");
-champ.addEventListener("input", () => document.getElementById("nb").textContent = champ.value.length);
+const TYPES = ["📦 Faux colis", "💼 Faux jobs", "👕 Arnaques Vinted", "💸 Mules financières", "👩 Coucou maman",
+  "🏦 Faux conseiller", "📈 Crypto miracle", "🎁 Faux concours", "🔐 Vol de compte Insta", "🚗 Fausse amende"];
 
+const CHARGEMENT = ["L'IA lit ton message…", "Recherche de liens louches…", "Détection des pièges…", "Calcul du score…"];
+const CIRCONFERENCE = 326.73;
+
+const $ = (id) => document.getElementById(id);
+const champ = $("message");
+const btn = $("btnAnalyser");
 let dernierScore = 0;
+let minuterie = null;
+
+// Bandeau défilant (contenu doublé pour une boucle sans coupure)
+const ligne = TYPES.map(t => `<span>${t}</span><span>✦</span>`).join("");
+$("ticker").innerHTML = ligne + ligne;
+
+// Compteur de caractères
+function majCompteur() { $("nb").textContent = champ.value.length; }
+champ.addEventListener("input", majCompteur);
+
+// Ctrl/Cmd + Entrée pour analyser
+champ.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) lancer();
+});
+
+// Boutons
+btn.addEventListener("click", lancer);
+$("btnColler").addEventListener("click", async () => {
+  try {
+    const t = await navigator.clipboard.readText();
+    if (t) { champ.value = t.slice(0, 3000); majCompteur(); }
+  } catch {
+    montrerErreur("Ton navigateur bloque le collage auto : fais un appui long dans la zone, puis Coller 😉");
+  }
+});
+$("btnEffacer").addEventListener("click", () => { champ.value = ""; majCompteur(); champ.focus(); });
+$("btnPartager").addEventListener("click", partager);
+$("btnNouveau").addEventListener("click", () => {
+  champ.value = ""; majCompteur();
+  $("resultat").classList.remove("visible");
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  setTimeout(() => champ.focus(), 400);
+});
+document.querySelectorAll(".puce").forEach(p => p.addEventListener("click", () => {
+  champ.value = EXEMPLES[p.dataset.i];
+  majCompteur();
+  lancer();
+}));
+
+function chargement(actif) {
+  clearInterval(minuterie);
+  btn.disabled = actif;
+  if (!actif) { btn.innerHTML = 'Analyser 🔍 <span class="kbd">Ctrl + Entrée</span>'; return; }
+  let i = 0;
+  const maj = () => { btn.innerHTML = `<span class="spin"></span>${CHARGEMENT[i % CHARGEMENT.length]}`; i++; };
+  maj();
+  minuterie = setInterval(maj, 1300);
+}
 
 async function lancer() {
+  if (btn.disabled) return;
   const texte = champ.value.trim();
-  const btn = document.getElementById("btnAnalyser");
-  const err = document.getElementById("erreur");
-  err.style.display = "none";
-  if (!texte) { montrerErreur("Colle d'abord un message 😉"); return; }
+  $("erreur").style.display = "none";
+  if (!texte) { montrerErreur("Colle d'abord un message 😉"); champ.focus(); return; }
+  if (location.protocol === "file:") {
+    montrerErreur("⚠️ Tu as ouvert le fichier en local. Teste sur ton lien .netlify.app !");
+    return;
+  }
 
-  btn.disabled = true;
-  btn.innerHTML = '<span class="loader"></span>L\'IA analyse...';
-
+  chargement(true);
   try {
     const rep = await fetch("/api/analyser", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ message: texte })
     });
-    const data = await rep.json();
+    const brut = await rep.text();
+    let data;
+    try { data = JSON.parse(brut); }
+    catch {
+      console.error("Réponse reçue :", rep.status, brut);
+      if (rep.status === 404) throw new Error("Serveur introuvable (404) : la fonction n'est pas déployée.");
+      throw new Error(`Le serveur a répondu bizarrement (code ${rep.status}). Regarde les logs Netlify.`);
+    }
     if (!rep.ok) throw new Error(data.erreur || "Erreur inconnue");
     afficher(data);
   } catch (e) {
     montrerErreur("😕 " + e.message);
   } finally {
-    btn.disabled = false;
-    btn.textContent = "Analyser avec l'IA 🔍";
+    chargement(false);
   }
 }
 
 function afficher(r) {
   dernierScore = r.score;
-  let couleur;
-  if (r.score >= 50) couleur = "#ff3b5c";
-  else if (r.score >= 20) couleur = "#ff8a00";
-  else couleur = "#2ecc71";
+  const res = $("resultat");
 
-  const res = document.getElementById("resultat");
-  res.style.display = "block";
-  const s = document.getElementById("score");
-  s.textContent = r.score + "/100";
-  s.style.color = couleur;
-  document.getElementById("verdict").textContent = r.verdict;
-  document.getElementById("categorie").textContent = r.categorie;
-  document.getElementById("explication").textContent = r.explication;
+  let niveau, emoji, label;
+  if (r.score >= 50)      { niveau = "danger"; emoji = "🚨"; label = "RISQUE ÉLEVÉ"; }
+  else if (r.score >= 20) { niveau = "moyen";  emoji = "⚠️"; label = "MÉFIANCE"; }
+  else                    { niveau = "ok";     emoji = "✅"; label = "RISQUE FAIBLE"; }
 
-  const barre = document.getElementById("barre");
-  barre.style.background = couleur;
-  barre.style.width = "0";
-  setTimeout(() => barre.style.width = r.score + "%", 50);
+  res.dataset.niveau = niveau;
+  $("emojiNiv").textContent = emoji;
+  $("niveau").textContent = label;
+  $("verdict").textContent = r.verdict;
+  $("categorie").textContent = r.categorie;
+  $("explication").textContent = r.explication;
 
-  const zone = document.getElementById("signaux");
-  zone.innerHTML = "";
-  document.getElementById("zoneSignaux").style.display = r.signaux.length ? "block" : "none";
-  for (const sig of r.signaux) {
-    const d = document.createElement("div");
-    d.className = "signal";
-    d.textContent = sig;   // textContent = protection contre l'injection de code
-    zone.appendChild(d);
-  }
+  remplirListe($("signaux"), r.signaux);
+  $("blocSignaux").style.display = r.signaux.length ? "block" : "none";
+  remplirListe($("conseils"), [...r.conseils, "Si tu as déjà payé ou donné tes infos : appelle ta banque tout de suite."]);
 
-  const ul = document.getElementById("conseils");
-  ul.innerHTML = "";
-  for (const c of r.conseils) {
-    const li = document.createElement("li");
-    li.textContent = c;
-    ul.appendChild(li);
-  }
+  // Ré-affiche la carte pour rejouer l'animation
+  res.classList.remove("visible");
+  void res.offsetWidth;
+  res.classList.add("visible");
+
+  // Jauge + compteur animés
+  const progres = $("progres");
+  progres.style.transition = "none";
+  progres.style.strokeDashoffset = CIRCONFERENCE;
+  void progres.getBoundingClientRect();
+  progres.style.transition = "";
+  setTimeout(() => { progres.style.strokeDashoffset = CIRCONFERENCE * (1 - r.score / 100); }, 80);
+  compter($("score"), r.score);
+
   res.scrollIntoView({ behavior: "smooth" });
 }
 
-function montrerErreur(msg) {
-  const err = document.getElementById("erreur");
-  err.textContent = msg;
-  err.style.display = "block";
+function remplirListe(el, items) {
+  el.innerHTML = "";
+  for (const t of items) {
+    const li = document.createElement("li");
+    li.textContent = t;   // textContent = protection contre l'injection de code
+    el.appendChild(li);
+  }
 }
 
-function exemple(i) {
-  champ.value = EXEMPLES[i];
-  champ.dispatchEvent(new Event("input"));
-  lancer();
+function compter(el, cible) {
+  const duree = 1100, debut = performance.now();
+  function pas(t) {
+    const p = Math.min(1, (t - debut) / duree);
+    el.textContent = Math.round(cible * (1 - Math.pow(1 - p, 3)));
+    if (p < 1) requestAnimationFrame(pas);
+  }
+  requestAnimationFrame(pas);
+}
+
+function montrerErreur(msg) {
+  const err = $("erreur");
+  err.textContent = msg;
+  err.style.display = "block";
 }
 
 async function partager() {
   const texte = `J'ai testé un message louche : ${dernierScore}/100 de risque d'arnaque 🚨 Teste les tiens :`;
   const url = location.origin;
   if (navigator.share) {
-    try { await navigator.share({ title: "Arnaque ou pas ?", text: texte, url }); } catch (e) {}
+    try { await navigator.share({ title: "Arnaque ou pas ?", text: texte, url }); } catch {}
   } else {
-    await navigator.clipboard.writeText(texte + " " + url);
-    alert("Lien copié ! Colle-le à tes potes 📲");
+    try {
+      await navigator.clipboard.writeText(texte + " " + url);
+      montrerErreur("✅ Lien copié ! Colle-le à tes potes 📲");
+    } catch {}
   }
 }
 </script>
