@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Arnaque ou pas ? 🚨</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, -apple-system, sans-serif; background: #0d0d12; color: #f2f2f2; min-height: 100vh; padding: 20px; }
+  .wrap { max-width: 640px; margin: 0 auto; }
+  h1 { font-size: 2.2rem; text-align: center; margin: 20px 0 6px; }
+  h1 span { color: #ff3b5c; }
+  .sub { text-align: center; color: #9a9aad; margin-bottom: 24px; line-height: 1.5; }
+  textarea { width: 100%; height: 160px; background: #1a1a24; color: #fff; border: 2px solid #2c2c3a; border-radius: 16px; padding: 16px; font-size: 1rem; resize: vertical; font-family: inherit; }
+  textarea:focus { outline: none; border-color: #ff3b5c; }
+  .compteur { text-align: right; color: #66667a; font-size: .8rem; margin-top: 4px; }
+  .btn { width: 100%; margin-top: 10px; padding: 16px; font-size: 1.1rem; font-weight: 700; border: none; border-radius: 16px; background: linear-gradient(90deg, #ff3b5c, #ff8a00); color: #fff; cursor: pointer; transition: transform .1s, opacity .2s; }
+  .btn:active { transform: scale(.97); }
+  .btn:disabled { opacity: .6; cursor: wait; }
+  .exemples { margin-top: 16px; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+  .exemples button { background: #1a1a24; color: #ccc; border: 1px solid #2c2c3a; border-radius: 999px; padding: 8px 14px; cursor: pointer; font-size: .85rem; }
+  .exemples button:hover { border-color: #ff8a00; color: #fff; }
+  #resultat { display: none; margin-top: 28px; background: #1a1a24; border-radius: 20px; padding: 24px; animation: pop .3s ease; }
+  @keyframes pop { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .score { font-size: 3.5rem; font-weight: 900; text-align: center; }
+  .verdict { text-align: center; font-size: 1.3rem; font-weight: 700; margin-bottom: 10px; }
+  .badge { display: block; width: fit-content; margin: 0 auto 16px; background: #2c2c3a; padding: 6px 14px; border-radius: 999px; font-size: .85rem; color: #ffb3c0; }
+  .jauge { height: 12px; background: #2c2c3a; border-radius: 999px; overflow: hidden; margin-bottom: 20px; }
+  .jauge div { height: 100%; width: 0; transition: width .8s ease; border-radius: 999px; }
+  .explication { background: #22222f; border-radius: 12px; padding: 14px; line-height: 1.5; }
+  h3 { margin: 18px 0 10px; font-size: 1.05rem; }
+  .signal { background: #22222f; border-left: 4px solid #ff3b5c; border-radius: 10px; padding: 10px 12px; margin-bottom: 8px; line-height: 1.4; }
+  ul { padding-left: 20px; } li { margin-bottom: 6px; line-height: 1.4; }
+  .partager { background: #2c2c3a; margin-top: 18px; }
+  .erreur { margin-top: 16px; background: #3a1a22; border: 1px solid #ff3b5c; border-radius: 12px; padding: 12px; text-align: center; display: none; }
+  .loader { display: inline-block; width: 18px; height: 18px; border: 3px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; vertical-align: middle; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .footer { text-align: center; color: #66667a; font-size: .8rem; margin: 30px 0; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Arnaque <span>ou pas</span> ? 🚨</h1>
+  <p class="sub">Colle un SMS, un DM ou un mail louche. Notre IA te dit si ça pue l'arnaque.<br>🔒 On ne stocke pas tes messages. Pense à masquer tes infos perso (nom, numéro, IBAN).</p>
+
+  <textarea id="message" maxlength="3000" placeholder="Ex : Votre colis est en attente, réglez 1,99€ de frais sous 24h..."></textarea>
+  <div class="compteur"><span id="nb">0</span>/3000</div>
+  <button class="btn" id="btnAnalyser" onclick="lancer()">Analyser avec l'IA 🔍</button>
+  <div class="erreur" id="erreur"></div>
+
+  <div class="exemples">
+    <button onclick="exemple(0)">📦 Faux colis</button>
+    <button onclick="exemple(1)">💼 Faux job</button>
+    <button onclick="exemple(2)">👕 Vinted</button>
+    <button onclick="exemple(3)">💸 Mule</button>
+    <button onclick="exemple(4)">👩 « Coucou maman »</button>
+    <button onclick="exemple(5)">😊 Message normal</button>
+  </div>
+
+  <div id="resultat">
+    <div class="score" id="score"></div>
+    <div class="verdict" id="verdict"></div>
+    <span class="badge" id="categorie"></span>
+    <div class="jauge"><div id="barre"></div></div>
+    <div class="explication" id="explication"></div>
+    <div id="zoneSignaux"><h3>🚩 Signaux d'alerte</h3><div id="signaux"></div></div>
+    <h3>✅ Ce que tu dois faire</h3>
+    <ul id="conseils"></ul>
+    <h3>📢 Où signaler</h3>
+    <ul>
+      <li><b>SMS frauduleux</b> : transfère-le gratuitement au <b>33700</b></li>
+      <li><b>Victime ou doute</b> : 17Cyber sur cybermalveillance.gouv.fr</li>
+      <li><b>Contenu illicite en ligne</b> : internet-signalement.gouv.fr (Pharos)</li>
+      <li><b>Harcèlement / chantage</b> : appelle le <b>3018</b> (gratuit et anonyme)</li>
+      <li><b>Paiement par carte frauduleux</b> : fais opposition auprès de ta banque tout de suite</li>
+    </ul>
+    <button class="btn partager" onclick="partager()">📲 Partager à mes potes</button>
+  </div>
+
+  <p class="footer">⚠️ Analyse faite par une IA : elle peut se tromper.<br>Un score faible ne veut pas dire « sans danger ». En cas de doute, ne clique pas et ne paie pas.</p>
+</div>
+
+<script>
+const EXEMPLES = [
+  "Votre colis est en attente. Des frais de livraison de 1,99€ sont à régler sous 24h : https://bit.ly/colis-fr",
+  "Salut ! On recrute 🔥 300€ par jour depuis ton téléphone, sans expérience. Contacte-moi sur Telegram 😉",
+  "Bonjour, pour recevoir votre paiement Vinted, cliquez sur ce lien de paiement et entrez votre carte bancaire.",
+  "Tu peux prêter ton compte pour recevoir un virement ? Tu renvoies l'argent et tu gardes une commission de 200€",
+  "Coucou maman, j'ai changé de numéro, mon téléphone est cassé. Tu peux me faire un virement urgent ? 🙏",
+  "Yo on se retrouve à 18h devant le ciné ? Je prends les places 🍿",
+];
+
+const champ = document.getElementById("message");
+champ.addEventListener("input", () => document.getElementById("nb").textContent = champ.value.length);
+
+let dernierScore = 0;
+
+async function lancer() {
+  const texte = champ.value.trim();
+  const btn = document.getElementById("btnAnalyser");
+  const err = document.getElementById("erreur");
+  err.style.display = "none";
+  if (!texte) { montrerErreur("Colle d'abord un message 😉"); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="loader"></span>L\'IA analyse...';
+
+  try {
+    const rep = await fetch("/api/analyser", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: texte })
+    });
+    const data = await rep.json();
+    if (!rep.ok) throw new Error(data.erreur || "Erreur inconnue");
+    afficher(data);
+  } catch (e) {
+    montrerErreur("😕 " + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Analyser avec l'IA 🔍";
+  }
+}
+
+function afficher(r) {
+  dernierScore = r.score;
+  let couleur;
+  if (r.score >= 50) couleur = "#ff3b5c";
+  else if (r.score >= 20) couleur = "#ff8a00";
+  else couleur = "#2ecc71";
+
+  const res = document.getElementById("resultat");
+  res.style.display = "block";
+  const s = document.getElementById("score");
+  s.textContent = r.score + "/100";
+  s.style.color = couleur;
+  document.getElementById("verdict").textContent = r.verdict;
+  document.getElementById("categorie").textContent = r.categorie;
+  document.getElementById("explication").textContent = r.explication;
+
+  const barre = document.getElementById("barre");
+  barre.style.background = couleur;
+  barre.style.width = "0";
+  setTimeout(() => barre.style.width = r.score + "%", 50);
+
+  const zone = document.getElementById("signaux");
+  zone.innerHTML = "";
+  document.getElementById("zoneSignaux").style.display = r.signaux.length ? "block" : "none";
+  for (const sig of r.signaux) {
+    const d = document.createElement("div");
+    d.className = "signal";
+    d.textContent = sig;   // textContent = protection contre l'injection de code
+    zone.appendChild(d);
+  }
+
+  const ul = document.getElementById("conseils");
+  ul.innerHTML = "";
+  for (const c of r.conseils) {
+    const li = document.createElement("li");
+    li.textContent = c;
+    ul.appendChild(li);
+  }
+  res.scrollIntoView({ behavior: "smooth" });
+}
+
+function montrerErreur(msg) {
+  const err = document.getElementById("erreur");
+  err.textContent = msg;
+  err.style.display = "block";
+}
+
+function exemple(i) {
+  champ.value = EXEMPLES[i];
+  champ.dispatchEvent(new Event("input"));
+  lancer();
+}
+
+async function partager() {
+  const texte = `J'ai testé un message louche : ${dernierScore}/100 de risque d'arnaque 🚨 Teste les tiens :`;
+  const url = location.origin;
+  if (navigator.share) {
+    try { await navigator.share({ title: "Arnaque ou pas ?", text: texte, url }); } catch (e) {}
+  } else {
+    await navigator.clipboard.writeText(texte + " " + url);
+    alert("Lien copié ! Colle-le à tes potes 📲");
+  }
+}
+</script>
+</body>
+</html>
